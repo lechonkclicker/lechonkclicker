@@ -114,6 +114,23 @@
             animation: rainbow 3s infinite linear;
             z-index: 1000;
         }
+        
+        #shiny-counter {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            color: gold;
+            text-shadow: 0 0 5px gold;
+            z-index: 1000;
+        }
+        
+        .rainbow-text {
+            animation: rainbow 3s infinite linear;
+        }
     </style>
 </head>
 <body>
@@ -128,6 +145,7 @@
     </div>
 
     <div id="rainbow-counter" style="display: none;">Rainbow Lechonks: 0</div>
+    <div id="shiny-counter" style="display: none;">Shiny Lechonks: 0</div>
 
     <audio id="background-music" loop>
         <source src="lechonk.mp3" type="audio/mp3">
@@ -138,6 +156,7 @@
             const mainLechonk = document.getElementById('main-lechonk');
             const counter = document.getElementById('counter');
             const rainbowCounter = document.getElementById('rainbow-counter');
+            const shinyCounter = document.getElementById('shiny-counter');
             const gameContainer = document.getElementById('game-container');
             const music = document.getElementById('background-music');
             const muteButton = document.getElementById('mute-button');
@@ -145,6 +164,7 @@
             
             let count = 0;
             let rainbowCount = 0;
+            let shinyCount = 0;
             let musicPlaying = false;
             
             function playMusic() {
@@ -167,9 +187,13 @@
             resetButton.addEventListener('click', function() {
                 count = 0;
                 rainbowCount = 0;
+                shinyCount = 0;
                 counter.textContent = `Lechonks: ${count}`;
                 rainbowCounter.style.display = 'none';
                 rainbowCounter.textContent = `Rainbow Lechonks: ${rainbowCount}`;
+                shinyCounter.style.display = 'none';
+                shinyCounter.textContent = `Shiny Lechonks: ${shinyCount}`;
+                shinyCounter.classList.remove('rainbow-text');
                 const miniLechonks = document.querySelectorAll('.mini-lechonk');
                 miniLechonks.forEach(lechonk => lechonk.remove());
             });
@@ -183,7 +207,10 @@
             
             function createMiniLechonk() {
                 const miniLechonk = document.createElement('img');
-                miniLechonk.src = 'lechonk.png';
+                const isShiny = Math.random() < 0.001; // Shiny is 1/1000 chance
+                const isRainbow = Math.random() < 0.01; // Rainbow is 1/100 chance
+                
+                miniLechonk.src = isShiny ? 'shinylechonk.png' : 'lechonk.png';
                 miniLechonk.className = 'mini-lechonk';
                 
                 const maxX = window.innerWidth - 50;
@@ -194,6 +221,9 @@
                 miniLechonk.style.left = `${randomX}px`;
                 miniLechonk.style.top = `${randomY}px`;
                 
+                miniLechonk.dataset.originalX = randomX;
+                miniLechonk.dataset.originalY = randomY;
+                
                 const randomSize = 30 + Math.random() * 50;
                 miniLechonk.style.width = `${randomSize}px`;
                 miniLechonk.style.height = `${randomSize}px`;
@@ -202,7 +232,20 @@
                 const spinSpeed = 2 + Math.random() * 3;
                 miniLechonk.style.animation = `spin ${spinSpeed}s infinite ${spinDirection > 0 ? 'linear' : 'reverse'}`;
                 
-                if (Math.random() < 0.05) {
+                if (isShiny) {
+                    shinyCount++;
+                    shinyCounter.style.display = 'block';
+                    shinyCounter.textContent = `Shiny Lechonks: ${shinyCount}`;
+                    
+                    const currentSize = parseFloat(miniLechonk.style.width);
+                    miniLechonk.style.width = `${currentSize * 2}px`;
+                    miniLechonk.style.height = `${currentSize * 2}px`;
+                    
+                    miniLechonk.classList.add('rainbow-lechonk');
+                    shinyCounter.classList.add('rainbow-text');
+                }
+                
+                if (isRainbow && !isShiny) {
                     miniLechonk.classList.add('rainbow-lechonk');
                     rainbowCount++;
                     rainbowCounter.style.display = 'block';
@@ -213,22 +256,14 @@
                     miniLechonk.style.height = `${currentSize * 1.5}px`;
                 }
                 
+                if (isRainbow && isShiny) {
+                    rainbowCount++;
+                    rainbowCounter.style.display = 'block';
+                    rainbowCounter.textContent = `Rainbow Lechonks: ${rainbowCount}`;
+                }
+                
                 document.body.appendChild(miniLechonk);
             }
-            
-            window.addEventListener('resize', function() {
-                const miniLechonks = document.querySelectorAll('.mini-lechonk');
-                const maxX = window.innerWidth - 50;
-                const maxY = window.innerHeight - 50;
-                
-                miniLechonks.forEach(lechonk => {
-                    const x = parseInt(lechonk.style.left);
-                    const y = parseInt(lechonk.style.top);
-                    
-                    if (x > maxX) lechonk.style.left = `${maxX}px`;
-                    if (y > maxY) lechonk.style.top = `${maxY}px`;
-                });
-            });
         });
     </script>
 </body>

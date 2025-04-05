@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lechonk Clicker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+        }
+
+        #counter {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1000;
+        }
+
+        #main-lechonk {
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            z-index: 1000;
+        }
+
+        #main-lechonk:active {
+            transform: scale(0.9);
+        }
+
+        .mini-lechonk {
+            position: absolute;
+            pointer-events: none;
+            animation: spin 2s infinite linear;
+            z-index: 1;
+        }
+
+        .rainbow-lechonk {
+            animation: spin 2s infinite linear, rainbow 3s infinite linear !important;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        @keyframes rainbow {
+            0% { filter: hue-rotate(0deg) brightness(1.2) drop-shadow(0 0 10px red); }
+            16.67% { filter: hue-rotate(60deg) brightness(1.2) drop-shadow(0 0 10px orange); }
+            33.33% { filter: hue-rotate(120deg) brightness(1.2) drop-shadow(0 0 10px yellow); }
+            50% { filter: hue-rotate(180deg) brightness(1.2) drop-shadow(0 0 10px green); }
+            66.67% { filter: hue-rotate(240deg) brightness(1.2) drop-shadow(0 0 10px blue); }
+            83.33% { filter: hue-rotate(300deg) brightness(1.2) drop-shadow(0 0 10px violet); }
+            100% { filter: hue-rotate(360deg) brightness(1.2) drop-shadow(0 0 10px red); }
+        }
+
+        #music-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        button {
+            background-color: #333;
+            color: #e0e0e0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        #rainbow-counter {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            animation: rainbow 3s infinite linear;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="counter">Lechonks: 0</div>
+        <img id="main-lechonk" src="lechonk.png" alt="Lechonk">
+    </div>
+
+    <div id="music-controls">
+        <button id="mute-button">Mute</button>
+        <button id="reset-button">Reset</button>
+    </div>
+
+    <div id="rainbow-counter" style="display: none;">Rainbow Lechonks: 0</div>
+
+    <audio id="background-music" loop>
+        <source src="lechonk.mp3" type="audio/mp3">
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainLechonk = document.getElementById('main-lechonk');
+            const counter = document.getElementById('counter');
+            const rainbowCounter = document.getElementById('rainbow-counter');
+            const gameContainer = document.getElementById('game-container');
+            const music = document.getElementById('background-music');
+            const muteButton = document.getElementById('mute-button');
+            const resetButton = document.getElementById('reset-button');
+            
+            let count = 0;
+            let rainbowCount = 0;
+            let musicPlaying = false;
+            
+            function playMusic() {
+                if (!musicPlaying) {
+                    music.play().catch(e => console.log("Audio playback failed:", e));
+                    musicPlaying = true;
+                }
+            }
+            
+            muteButton.addEventListener('click', function() {
+                if (music.muted) {
+                    music.muted = false;
+                    muteButton.textContent = 'Mute';
+                } else {
+                    music.muted = true;
+                    muteButton.textContent = 'Unmute';
+                }
+            });
+            
+            resetButton.addEventListener('click', function() {
+                count = 0;
+                rainbowCount = 0;
+                counter.textContent = `Lechonks: ${count}`;
+                rainbowCounter.style.display = 'none';
+                rainbowCounter.textContent = `Rainbow Lechonks: ${rainbowCount}`;
+                const miniLechonks = document.querySelectorAll('.mini-lechonk');
+                miniLechonks.forEach(lechonk => lechonk.remove());
+            });
+            
+            mainLechonk.addEventListener('click', function() {
+                playMusic();
+                count++;
+                counter.textContent = `Lechonks: ${count}`;
+                createMiniLechonk();
+            });
+            
+            function createMiniLechonk() {
+                const miniLechonk = document.createElement('img');
+                miniLechonk.src = 'lechonk.png';
+                miniLechonk.className = 'mini-lechonk';
+                
+                const maxX = window.innerWidth - 50;
+                const maxY = window.innerHeight - 50;
+                const randomX = Math.random() * maxX;
+                const randomY = Math.random() * maxY;
+                
+                miniLechonk.style.left = `${randomX}px`;
+                miniLechonk.style.top = `${randomY}px`;
+                
+                const randomSize = 30 + Math.random() * 50;
+                miniLechonk.style.width = `${randomSize}px`;
+                miniLechonk.style.height = `${randomSize}px`;
+                
+                const spinDirection = Math.random() > 0.5 ? 1 : -1;
+                const spinSpeed = 2 + Math.random() * 3;
+                miniLechonk.style.animation = `spin ${spinSpeed}s infinite ${spinDirection > 0 ? 'linear' : 'reverse'}`;
+                
+                if (Math.random() < 0.05) {
+                    miniLechonk.classList.add('rainbow-lechonk');
+                    rainbowCount++;
+                    rainbowCounter.style.display = 'block';
+                    rainbowCounter.textContent = `Rainbow Lechonks: ${rainbowCount}`;
+                    
+                    const currentSize = parseFloat(miniLechonk.style.width);
+                    miniLechonk.style.width = `${currentSize * 1.5}px`;
+                    miniLechonk.style.height = `${currentSize * 1.5}px`;
+                }
+                
+                document.body.appendChild(miniLechonk);
+            }
+            
+            window.addEventListener('resize', function() {
+                const miniLechonks = document.querySelectorAll('.mini-lechonk');
+                const maxX = window.innerWidth - 50;
+                const maxY = window.innerHeight - 50;
+                
+                miniLechonks.forEach(lechonk => {
+                    const x = parseInt(lechonk.style.left);
+                    const y = parseInt(lechonk.style.top);
+                    
+                    if (x > maxX) lechonk.style.left = `${maxX}px`;
+                    if (y > maxY) lechonk.style.top = `${maxY}px`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
